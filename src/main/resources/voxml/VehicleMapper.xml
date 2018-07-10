@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper  
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"  
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">  
+<mapper namespace="com.ljw.spring.mybits.dao.VehicleDao">
+
+	<select id="findAll" resultMap="vehicleMap">
+		select * from t_car
+	</select>
+	<resultMap type="com.ljw.spring.mybits.dao.entity.Vehicle" id="vehicleMap">
+		<id property="id" column="id"></id>
+		<result property="color" column="color"></result>
+		<discriminator javaType="java.lang.String" column="type">
+			<case value="T" resultType="com.ljw.spring.mybits.dao.entity.Truck">
+				<result property="boxSize" column="boxSize"></result>
+			</case>
+			<case value="C" resultType="com.ljw.spring.mybits.dao.entity.Car">
+				<result property="doorSize" column="doorSize"/>
+			</case>
+		</discriminator>
+	</resultMap>
+
+</mapper>

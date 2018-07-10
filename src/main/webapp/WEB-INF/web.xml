@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<web-app version="2.5" 
+	xmlns="http://java.sun.com/xml/ns/javaee"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="
+		http://java.sun.com/xml/ns/javaee 
+		http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd">
+	
+	
+	
+	
+	
+	<!-- Spring配置 -->
+	<!-- ============================================================================================================================= -->
+	<!-- needed for ContextLoaderListener -->
+	<!-- 指定Spring Bean的配置文件所在目录。默认配置在WEB-INF目录下 -->
+	<context-param>
+		<param-name>contextConfigLocation</param-name>
+		<param-value>
+			classpath:spring-bean.xml
+		</param-value>
+	</context-param>
+
+<!-- 无效	<context-param> -->
+<!-- 		<param-name>spring.profiles.default</param-name> -->
+<!-- 		<param-value>flower</param-value> -->
+<!-- 	</context-param> -->
+
+	<!-- Bootstraps the root web application context before servlet initialization -->
+	<listener>
+		<listener-class>org.springframework.web.context.ContextLoaderListener</listener-class>
+	</listener>
+	
+	
+	<!-- Spring MVC配置:Spring前端控制器 -->
+	<!-- ============================================================================================================================= -->
+	<!-- The front controller of this Spring Web application, responsible for handling all application requests -->
+	<servlet>
+		<servlet-name>springDispacherServlet</servlet-name>
+		<servlet-class>org.springframework.web.servlet.DispatcherServlet</servlet-class>
+		<init-param>
+			<!-- 可以自定义servlet.xml配置文件的位置和名称，默认为WEB-INF目录下，名称为[<servlet-name>]-servlet.xml，如spring-servlet.xml -->
+			<param-name>contextConfigLocation</param-name>
+			<param-value>classpath:spring-mvc.xml</param-value>
+		</init-param>
+		<init-param>
+			<param-name>spring.profiles.default</param-name>
+			<param-value>flower</param-value>
+		</init-param>
+		<load-on-startup>1</load-on-startup>
+	</servlet>
+	
+	<!-- Map all requests to the DispatcherServlet for handling -->
+	<servlet-mapping>
+		<servlet-name>springDispacherServlet</servlet-name>
+		<!-- 如果是/*,指的是项目名之后的所有路径拿过去映射 ， 如果是/,指的是DispatcherServlet在xml去掉前后缀之后的中间的string对应的modelAndView -->
+		<url-pattern>/</url-pattern>
+	</servlet-mapping>
+	
+	
+	<!-- 解决springMVC不能引入js或者css等静态资源文件问题配置 -->
+	<!-- ============================================================================================================================= -->
+	
+	<!-- 
+		**jsp不能引用js，cs等解决办法**
+		**在感叹Spring3注解配置清爽的同时竟然出现了这个不和谐的事情**
+		问题原因：罪魁祸首是web.xml下对spring的DispatcherServlet请求url映射的配置造成
+		
+		分析原因：<servlet-mapping>的<url-pattern>/</url-pattern>把所有的请求都交给spring去处理了，
+		而所有available的请求url都是在Constroller里使用类似@RequestMapping(value = "/login/{user}", method = RequestMethod.GET)这样的注解配置的，
+		这样的话对js/css/jpg/gif等静态资源的访问就会得不到。
+		
+		解决方法：（注意，需要是spring3.0.5以上版本）
+		1.在web.xml里添加如下的配置
+			<servlet-mapping>
+	     		<servlet-name>default</servlet-name>
+	     		<url-pattern>*.css</url-pattern>
+			</servlet-mapping>
+			<servlet-mapping>
+			    <servlet-name>default</servlet-name>
+			    <url-pattern>*.gif</url-pattern>
+			 </servlet-mapping>
+			 <servlet-mapping>
+			     <servlet-name>default</servlet-name>
+			     <url-pattern>*.jpg</url-pattern>
+			 </servlet-mapping>
+			 <servlet-mapping>
+			     <servlet-name>default</servlet-name>
+			     <url-pattern>*.js</url-pattern>
+			 </servlet-mapping>
+	-->
+
+	<!-- 声明log起效的：Log4j配置 -->
+	<!-- ============================================================================================================================= -->
+	<context-param>
+		<param-name>log4jConfigLocation</param-name>
+		<param-value>classpath:/log4j.xml</param-value>
+	</context-param>
+ 	<!-- 加载log4j配置文件 -->
+	<listener>
+		<listener-class>org.springframework.web.util.Log4jConfigListener</listener-class>
+	</listener>
+	
+	<!-- 解决中文乱码问题配置 -->
+	<!-- ============================================================================================================================= -->
+	<filter>
+		<filter-name>encodingFilter</filter-name>
+		<filter-class>org.springframework.web.filter.CharacterEncodingFilter</filter-class>
+		<init-param>
+			<param-name>encoding</param-name>
+			<param-value>UTF-8</param-value>
+		</init-param>
+	</filter>
+	<filter-mapping>
+		<filter-name>encodingFilter</filter-name>
+		<url-pattern>/*</url-pattern>
+	</filter-mapping>
+	
+	
+	
+</web-app>

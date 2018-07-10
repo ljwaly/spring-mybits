@@ -1,0 +1,236 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper  
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"  
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">  
+  
+<mapper namespace="com.ljw.spring.mybits.dao.EmpDao">
+	
+	<!-- 查询全部员工 -->
+	<select id="findAll" resultType="com.ljw.spring.mybits.dao.entity.Emp">
+		select * from t_emp
+	</select>
+	
+	
+	
+	<!-- if条件查询 -->
+	<select id="findByDept" 
+		parameterType="com.ljw.spring.mybits.dao.entity.Condition"
+		resultType="com.ljw.spring.mybits.dao.entity.Emp">
+	
+		select * from t_emp
+		<if test="deptno!=null">
+			where deptno=#{deptno}
+		</if>
+		
+	</select>
+	
+	<!-- choose条件查询 -->
+	<select id="findBySalary"
+		parameterType="com.ljw.spring.mybits.dao.entity.Condition"
+		resultType="com.ljw.spring.mybits.dao.entity.Emp">
+		
+		select * from t_emp
+		<choose>
+			<when test="salary>10000">
+				where sal>#{salary}
+			</when>
+			<otherwise>
+				where sal>10000
+			</otherwise>
+		 </choose>
+	</select>
+	
+	<!-- where条件查询 -->
+	<select id="findByDeptAndSalary"
+		parameterType="com.ljw.spring.mybits.dao.entity.Condition"
+		resultType="com.ljw.spring.mybits.dao.entity.Emp">
+		
+		select * from t_emp
+		<where>
+			<if test="deptno!=null">
+				and deptno=#{deptno}
+			</if>
+			<if test="salary!=null">
+				and sal>#{salary}
+			</if>
+		</where>
+	
+	</select>
+	
+	<!-- set条件更新 -->
+	<update id="update"
+		parameterType="com.ljw.spring.mybits.dao.entity.Emp">
+		
+		update t_emp 
+		<set>
+			<if test="ename!=null">
+				ename=#{ename},
+			</if>
+			<if test="job!=null">
+				job=#{job},
+			</if>
+			<if test="sal!=0.0">
+				sal=#{sal},
+			</if>
+			<if test="comm!=0.0">
+				comm=#{comm},
+			</if>
+			<if test="mgr!=0">
+				mgr=#{mgr},
+			</if>
+		</set>
+		where empno=#{empno}
+	</update>
+	
+	
+	<select id="findByDeptAndSalary2"
+		parameterType="com.ljw.spring.mybits.dao.entity.Condition"
+		resultType="com.ljw.spring.mybits.dao.entity.Emp">
+		
+		select * from t_emp
+		<trim prefix="where" prefixOverrides="and">
+			<if test="deptno!=null">
+				and deptno=#{deptno}
+			</if>
+			<if test="salary!=null">
+				and sal>#{salary}
+			</if>
+			
+		</trim>
+	</select>
+	
+	
+	<update id="update2"
+		parameterType="com.ljw.spring.mybits.dao.entity.Emp">
+		
+		update t_emp
+		<trim prefix="set" suffixOverrides=",">
+			<if test="ename!=null">
+				ename=#{ename},
+			</if>
+			<if test="job!=null">
+				job=#{job},
+			</if>
+		</trim>
+		where empno=#{empno}
+	</update>
+	
+	
+	<!-- 根据idList批量查询 -->
+	<select id="findByIds"
+		parameterType="com.ljw.spring.mybits.dao.entity.Condition"
+		resultType="com.ljw.spring.mybits.dao.entity.Emp">
+		
+		select * from t_emp where empno in
+		<foreach collection="empnos" open="(" close=")" separator="," item="id">
+			#{id}
+		</foreach>
+	</select>
+	
+	<!-- 插入命令，添加 -->
+	<insert id="save" 
+		parameterType="com.ljw.spring.mybits.dao.entity.Emp"
+		keyProperty="empno" useGeneratedKeys="true">
+		insert into t_emp values(
+			#{empno},
+			#{ename},
+			#{job},
+			#{mgr},
+			#{hiredate},
+			#{sal},
+			#{comm},	
+			#{deptno}
+		)
+	</insert>
+	
+	<!--  多对一 分表联查  -->
+	<select id="findById" parameterType="java.lang.Integer" resultMap="empeMap">
+		select * from t_empe where empno=#{empno}
+	</select>
+	<select id="findDept" parameterType="java.lang.Integer" resultType="com.ljw.spring.mybits.dao.entity.Dept">
+		select * from t_dept where deptno=#{deptno}
+	</select>
+	<resultMap id="empeMap" type="com.ljw.spring.mybits.dao.entity.Empe">
+		<id property="deptno" column="deptno"/>
+		<association property="dept" column="deptno" javaType="com.ljw.spring.mybits.dao.entity.Dept" select="findDept"/>
+	</resultMap>
+
+	<!-- 多对一 -多表联查  -->
+	<select id="findById2" parameterType="java.lang.Integer" resultMap="empMap2">
+		select e.*,d.* from t_empe e inner join t_dept d on e.deptno=d.deptno where e.empno=#{id}
+	</select>
+	<resultMap id="empMap2" type="com.ljw.spring.mybits.dao.entity.Empe">
+		<id property="empno" column="empno"></id>
+		<result property="ename" column="ename"/>
+		<result property="job" column="job"/>
+		<result property="mgr" column="mgr"/>
+		<result property="hiredate" column="hiredate"/>
+		<result property="sal" column="sal"/>
+		<result property="comm" column="comm"/>
+		<result property="deptno" column="deptno"/>
+		<association property="dept" column="deptno" javaType="com.ljw.spring.mybits.dao.entity.Dept">
+			<id property="deptno" column="deptno"/>
+			<result property="dname" column="dname"/>
+			<result property="location" column="location"/>
+		</association>
+	</resultMap>
+
+	
+	<!-- 一对多- 分表查询 -->
+	<select id="findByDeptId" parameterType="java.lang.Integer" resultMap="deptMaps">
+		select * from t_dept where deptno=#{id}
+	</select>
+	<select id="findByEmps" parameterType="java.lang.Integer" resultType="com.ljw.spring.mybits.dao.entity.Empe">
+		select * from t_empe where deptno=#{deptno}
+	</select>
+	<resultMap type="com.ljw.spring.mybits.dao.entity.Dept" id="deptMaps" >
+		<id property="deptno" column="deptno"></id>
+		<collection property="emps" column="deptno" javaType="java.util.ArrayList" select="findByEmps" ofType="com.ljw.spring.mybits.dao.entity.Empe"></collection>
+	</resultMap>
+	
+	
+	
+	<!--一对多- 多表联查 -->
+	<select id="findByDeptId2" parameterType="java.lang.Integer" resultMap="deptMaps2">
+		select d.*,e.* from t_dept d inner join t_empe e on d.deptno=e.deptno where d.deptno=#{id}
+	</select>
+	<resultMap type="com.ljw.spring.mybits.dao.entity.Dept" id="deptMaps2">
+		<id property="deptno" column="deptno"></id>
+		<result property="dname" column="dname" jdbcType="VARCHAR" javaType="string"></result>
+		<result property="location" column="location" jdbcType="VARCHAR" javaType="string"></result>
+		<collection property="emps" column="deptno" javaType="java.util.ArrayList" ofType="com.ljw.spring.mybits.dao.entity.Empe">
+			<id property="empno" column="empno"></id>
+			<result property="ename" column="ename"></result>
+			<result property="job" column="job"/>
+			<result property="mgr" column="mgr"/>
+			<result property="hiredate" column="hiredate"/>
+			<result property="sal" column="sal"/>
+			<result property="comm" column="comm"/>
+			<result property="deptno" column="deptno"/>
+		</collection>
+	</resultMap>
+	
+	<delete id="delete" parameterType="java.lang.Integer">
+		delete from t_emp where empno=#{id}
+	</delete>
+	
+</mapper> 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ 
+  
+  
